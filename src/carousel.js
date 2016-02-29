@@ -79,7 +79,8 @@ const Carousel = React.createClass({
     ]),
     speed: React.PropTypes.number,
     vertical: React.PropTypes.bool,
-    width: React.PropTypes.string
+    width: React.PropTypes.string,
+    stickToEnd: React.PropTypes.bool
   },
 
   getDefaultProps() {
@@ -97,7 +98,6 @@ const Carousel = React.createClass({
       slideIndex: 0,
       slidesToShow: 1,
       slidesToScroll: 1,
-      slidesToShow: 1,
       slideWidth: 1,
       speed: 500,
       vertical: false,
@@ -309,28 +309,35 @@ const Carousel = React.createClass({
   },
 
   handleSwipe(e) {
+    var childrenCount = React.Children.count(this.props.children);
+    var slidesToScroll = this.state.slidesToScroll;
+    var slidesToShow = this.props.slidesToShow;
+    var currentSlide = this.state.currentSlide;
+    var lastSlide = this.getLastSlide();
+
     if (typeof (this.touchObject.length) !== 'undefined' && this.touchObject.length > 44) {
       this.clickSafe = true;
     } else {
       this.clickSafe = false;
     }
 
-    if (this.touchObject.length > (this.state.slideWidth / this.props.slidesToShow) / 5) {
+    if (this.touchObject.length > (this.state.slideWidth / slidesToShow) / 5) {
       if (this.touchObject.direction === 1) {
-        if (this.state.currentSlide >= React.Children.count(this.props.children) - this.state.slidesToScroll) {
+
+        if (this.state.currentSlide >= lastSlide) {
           this.animateSlide(tweenState.easingTypes[this.props.edgeEasing]);
         } else {
           this.nextSlide();
         }
       } else if (this.touchObject.direction === -1) {
-        if (this.state.currentSlide <= 0) {
+        if (currentSlide <= 0) {
           this.animateSlide(tweenState.easingTypes[this.props.edgeEasing]);
         } else {
           this.previousSlide();
         }
       }
     } else {
-      this.goToSlide(this.state.currentSlide);
+      this.goToSlide(currentSlide);
     }
 
     this.touchObject = {};
@@ -376,7 +383,9 @@ const Carousel = React.createClass({
 
   goToSlide(index) {
     var self = this;
-    if (index >= React.Children.count(this.props.children) || index < 0) {
+    var lastSlide = this.getLastSlide();
+
+    if (index > lastSlide || index < 0) {
       return;
     }
 
@@ -390,18 +399,28 @@ const Carousel = React.createClass({
       self.setExternalData();
     });
   },
+  getLastSlide() {
+    var childrenCount = React.Children.count(this.props.children);
+    var slidesToShow = this.props.slidesToShow;
+    var slidesToScroll = this.state.slidesToScroll;
+
+    return this.props.stickToEnd ? childrenCount - slidesToShow : childrenCount - slidesToScroll;
+  },
 
   nextSlide() {
-    var self = this;
-    if ((this.state.currentSlide + this.state.slidesToScroll) >= React.Children.count(this.props.children)) {
+    var slidesToScroll = this.state.slidesToScroll;
+    var currentSlide = this.state.currentSlide;
+
+    var lastSlide = this.getLastSlide();
+
+    if ((currentSlide + slidesToScroll) > lastSlide) {
       return;
     }
 
-    this.goToSlide(this.state.currentSlide + this.state.slidesToScroll);
+    this.goToSlide(currentSlide + slidesToScroll);
   },
 
   previousSlide() {
-    var self = this;
     if ((this.state.currentSlide - this.state.slidesToScroll) < 0) {
       return;
     }
