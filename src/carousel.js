@@ -212,7 +212,9 @@ const Carousel = React.createClass({
           startY: self.touchObject.startY,
           endX: e.touches[0].pageX,
           endY: e.touches[0].pageY,
-          length: Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2))),
+          length: self.props.vertical ?
+            Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2))) :
+            Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2))),
           direction: direction
         }
 
