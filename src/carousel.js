@@ -175,7 +175,7 @@ const Carousel = React.createClass({
               </div>
             )
           })
-        : null}
+          : null}
         <style type="text/css" dangerouslySetInnerHTML={{__html: self.getStyleTagStyles()}}/>
       </div>
     )
@@ -212,13 +212,15 @@ const Carousel = React.createClass({
           startY: self.touchObject.startY,
           endX: e.touches[0].pageX,
           endY: e.touches[0].pageY,
-          length: Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2))),
+          length: self.props.vertical ?
+            Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2))) :
+            Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2))),
           direction: direction
         }
 
         self.setState({
           left: self.props.vertical ? 0 : (self.state.slideWidth * self.state.currentSlide + (self.touchObject.length * self.touchObject.direction)) * -1,
-          top: self.props.vertical ? (self.state.slideWidth * self.state.currentSlide + (self.touchObject.length * self.touchObject.direction)) * -1 : 0
+          top: self.props.vertical ? (self.state.slideWidth * self.state.currentSlide + (self.touchObject.length * self.touchObject.direction)) * -1 || 0: 0
         });
       },
       onTouchEnd(e) {
@@ -242,8 +244,8 @@ const Carousel = React.createClass({
     return {
       onMouseDown(e) {
         self.touchObject = {
-            startX: e.clientX,
-            startY: e.clientY
+          startX: e.clientX,
+          startY: e.clientY
         };
 
         self.setState({
@@ -267,7 +269,7 @@ const Carousel = React.createClass({
         }
 
         var length = self.props.vertical ? Math.round(Math.sqrt(Math.pow(e.clientY - self.touchObject.startY, 2)))
-                                         : Math.round(Math.sqrt(Math.pow(e.clientX - self.touchObject.startX, 2)))
+          : Math.round(Math.sqrt(Math.pow(e.clientX - self.touchObject.startX, 2)))
 
         self.touchObject = {
           startX: self.touchObject.startX,
@@ -280,7 +282,7 @@ const Carousel = React.createClass({
 
         self.setState({
           left: self.props.vertical ? 0 : self.getTargetLeft(self.touchObject.length * self.touchObject.direction),
-          top: self.props.vertical ? self.getTargetLeft(self.touchObject.length * self.touchObject.direction) : 0
+          top: self.props.vertical ? self.getTargetLeft(self.touchObject.length * self.touchObject.direction) || 0: 0
         });
       },
       onMouseUp(e) {
@@ -309,8 +311,6 @@ const Carousel = React.createClass({
   },
 
   handleSwipe(e) {
-    var childrenCount = React.Children.count(this.props.children);
-    var slidesToScroll = this.state.slidesToScroll;
     var slidesToShow = this.props.slidesToShow;
     var currentSlide = this.state.currentSlide;
     var lastSlide = this.getLastSlide();
@@ -565,7 +565,7 @@ const Carousel = React.createClass({
       slideWidth: slideWidth,
       slidesToScroll: slidesToScroll,
       left: this.props.vertical ? 0 : this.getTargetLeft(),
-      top: this.props.vertical ? this.getTargetLeft() : 0
+      top: this.props.vertical ? this.getTargetLeft() || 0: 0
     }, function() {
       self.setLeft()
     });
@@ -574,7 +574,7 @@ const Carousel = React.createClass({
   setLeft() {
     this.setState({
       left: this.props.vertical ? 0 : this.getTargetLeft(),
-      top: this.props.vertical ? this.getTargetLeft() : 0
+      top: this.props.vertical ? this.getTargetLeft() || 0 : 0
     })
   },
 
@@ -597,7 +597,7 @@ const Carousel = React.createClass({
       top: this.getTweeningValue('top'),
       left: this.getTweeningValue('left'),
       margin: this.props.vertical ? (this.props.cellSpacing / 2) * -1 + 'px 0px'
-                                  : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
+        : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
       padding: 0,
       height: this.props.vertical ? listWidth + spacingOffset : 'auto',
       width: this.props.vertical ? 'auto' : listWidth + spacingOffset,
