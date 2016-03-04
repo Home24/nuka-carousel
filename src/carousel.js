@@ -4,8 +4,9 @@ import React from 'react';
 import ReactDom from 'react-dom';
 import tweenState from 'react-tween-state';
 import decorators from './decorators';
-import assign from 'object-assign';
 import ExecutionEnvironment from 'exenv';
+import assign from 'lodash/assign';
+import unionBy from 'lodash/unionBy';
 
 const addEvent = function(elem, type, eventHandle) {
   if (elem === null || typeof (elem) === 'undefined') {
@@ -67,6 +68,7 @@ const Carousel = React.createClass({
     framePadding: React.PropTypes.string,
     initialSlideHeight: React.PropTypes.number,
     initialSlideWidth: React.PropTypes.number,
+    lazyLoading: React.PropTypes.bool,
     slideIndex: React.PropTypes.number,
     slidesToShow: React.PropTypes.number,
     slidesToScroll: React.PropTypes.oneOfType([
@@ -89,6 +91,7 @@ const Carousel = React.createClass({
       beforeSlide: function(){},
       cellAlign: 'left',
       cellSpacing: 0,
+      currentSlide: 0,
       data: function() {},
       decorators: decorators,
       dragging: true,
@@ -120,6 +123,10 @@ const Carousel = React.createClass({
 
   componentWillMount() {
     this.setInitialDimensions();
+
+    if (this.props.lazyLoading) {
+      this.initLazyLoading();
+    }
   },
 
   componentDidMount() {
@@ -141,7 +148,10 @@ const Carousel = React.createClass({
 
   render() {
     var self = this;
-    var children = React.Children.count(this.props.children) > 1 ? this.formatChildren(this.props.children) : this.props.children;
+    var children = this.getChildren();
+
+    children = React.Children.count(children) > 1 ? this.formatChildren(children) : children;
+
     return (
       <div className={['slider', this.props.className || ''].join(' ')} ref="slider" style={assign(this.getSliderStyles(), this.props.style || {})}>
         <div className="slider-frame"
@@ -389,6 +399,10 @@ const Carousel = React.createClass({
       return;
     }
 
+    if (this.props.lazyLoading) {
+      this.addToLazyLoadList(index);
+    }
+
     this.props.beforeSlide(this.state.currentSlide, index);
 
     this.setState({
@@ -490,6 +504,44 @@ const Carousel = React.createClass({
     if (ExecutionEnvironment.canUseDOM) {
       removeEvent(window, 'resize', self.onResize);
       removeEvent(document, 'readystatechange', self.onReadyStateChange);
+    }
+  },
+
+  initLazyLoading() {
+    var currentSlideIndex = this.props.currentSlide;
+    var slidesToShow = this.props.slidesToShow;
+
+    var children = React.Children.toArray(this.props.children);
+    var loadedSlides = children.slice(currentSlideIndex, currentSlideIndex + slidesToShow + 1);
+
+    this.setState({
+      lazyLoadList: loadedSlides
+    });
+  },
+
+  addToLazyLoadList(selectedSlideIndex = 0) {
+    var children = React.Children.toArray(this.props.children);
+    var slidesToShow = this.props.slidesToShow;
+    var lazyLoadList = this.state.lazyLoadList;
+
+    if (children.length === lazyLoadList.length) {
+      return;
+    }
+
+    var nextLoadedSlides = children.slice(selectedSlideIndex, selectedSlideIndex + slidesToShow + 1);
+
+    var merged = unionBy(lazyLoadList, nextLoadedSlides, (slide)=> slide.key);
+
+    this.setState({
+      lazyLoadList: merged
+    });
+  },
+
+  getChildren() {
+    if (this.props.lazyLoading) {
+      return this.state.lazyLoadList;
+    } else {
+      return this.props.children;
     }
   },
 
