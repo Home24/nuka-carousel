@@ -136,6 +136,17 @@ Initial height of the slides in pixels.
 
 Initial width of the slides in pixels.
 
+####lazyLoading
+`React.PropTypes.bool`
+
+Enables lazy loading for content
+
+####lazyLoadingBuffer
+`React.PropTypes.number`
+
+Number of slides in lazy loading buffer 
+Default: 1
+
 ####slideIndex
 `React.PropTypes.number`
 
@@ -162,6 +173,11 @@ Slides to scroll at once. Set to `"auto"` to always scroll the current number of
 
 Manually set slideWidth. If you want hard pixel widths, use a string like `slideWidth="20px"`, and if you prefer a percentage of the container, use a decimal integer like `slideWidth={0.8}`
 
+#### stickToEnd
+`React.PropTypes.bool`
+
+Enables mode when last slide stays at the end of carousel
+ 
 ####speed
 `React.PropTypes.number`
 
