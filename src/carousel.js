@@ -662,8 +662,7 @@ const Carousel = React.createClass({
       display: 'block',
       top: this.getTweeningValue('top'),
       left: this.getTweeningValue('left'),
-      margin: this.props.vertical ? (this.props.cellSpacing / 2) * -1 + 'px 0px'
-        : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
+      margin: this.props.vertical ? '0px 0px' : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
       padding: 0,
       height: this.props.vertical ? listWidth + spacingOffset : 'auto',
       width: this.props.vertical ? 'auto' : listWidth + spacingOffset,
