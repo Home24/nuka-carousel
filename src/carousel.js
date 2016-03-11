@@ -7,7 +7,6 @@ import decorators from './decorators';
 import ExecutionEnvironment from 'exenv';
 import assign from 'lodash/assign';
 import union from 'lodash/union';
-import './assets/styles.css';
 
 const addEvent = function(elem, type, eventHandle) {
   if (elem === null || typeof (elem) === 'undefined') {
