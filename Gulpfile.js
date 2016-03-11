@@ -26,7 +26,7 @@ gulp.task("babel", function() {
 });
 
 gulp.task("assets", function() {
-  return gulp.src('src/assets/*.css')
+  return gulp.src('src/assets/*.scss')
         .pipe(gulp.dest('lib/assets'));
 });
 
