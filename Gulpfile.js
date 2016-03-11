@@ -25,6 +25,11 @@ gulp.task("babel", function() {
         .pipe(gulp.dest('lib'));
 });
 
+gulp.task("assets", function() {
+  return gulp.src('src/assets/*.css')
+        .pipe(gulp.dest('lib/assets'));
+});
+
 gulp.task("webpack-dev-server", function(callback) {
 
   new WebpackDevServer(webpack(webpackDevConfig), {
@@ -54,5 +59,5 @@ gulp.task("karma", ['lint'], function() {
 });
 
 gulp.task('test', ['lint', 'karma']);
-gulp.task('build', ['babel']);
+gulp.task('build', ['babel', 'assets']);
 gulp.task('default', ['webpack-dev-server', 'open']);

@@ -193,7 +193,6 @@ describe('Carousel', function () {
           'slider'
         );
         expect(slider.props.style.backgroundColor).to.equal('black');
-        expect(slider.props.style.display).to.equal('block');
     });
 
     it('should merge provided styles with the defaults', function() {
@@ -210,7 +209,6 @@ describe('Carousel', function () {
           'slider'
         );
         expect(slider.props.style.backgroundColor).to.equal('black');
-        expect(slider.props.style.display).to.equal('block');
     });
 
     it('should align to 0 if cellAlign is left', function() {

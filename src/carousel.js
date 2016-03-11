@@ -7,6 +7,7 @@ import decorators from './decorators';
 import ExecutionEnvironment from 'exenv';
 import assign from 'lodash/assign';
 import union from 'lodash/union';
+import './assets/styles.css';
 
 const addEvent = function(elem, type, eventHandle) {
   if (elem === null || typeof (elem) === 'undefined') {
@@ -152,7 +153,7 @@ const Carousel = React.createClass({
     var self = this;
     var children = this.getChildren();
 
-    children = React.Children.count(children) > 1 ? this.formatChildren(children) : children;
+    children = this.formatChildren(children);
 
     return (
       <div className={['slider', this.props.className || ''].join(' ')} ref="slider" style={assign(this.getSliderStyles(), this.props.style || {})}>
@@ -188,7 +189,6 @@ const Carousel = React.createClass({
             )
           })
           : null}
-        <style type="text/css" dangerouslySetInnerHTML={{__html: self.getStyleTagStyles()}}/>
       </div>
     )
   },
@@ -658,48 +658,27 @@ const Carousel = React.createClass({
     var listWidth = this.state.slideWidth * React.Children.count(this.props.children);
     var spacingOffset = this.props.cellSpacing * React.Children.count(this.props.children);
     return {
-      position: 'relative',
-      display: 'block',
       top: this.getTweeningValue('top'),
       left: this.getTweeningValue('left'),
-      margin: this.props.vertical ? '0px 0px' : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
-      padding: 0,
+      margin: this.props.vertical ? (this.props.cellSpacing / 2) * -1 + 'px 0px'
+        : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
       height: this.props.vertical ? listWidth + spacingOffset : 'auto',
       width: this.props.vertical ? 'auto' : listWidth + spacingOffset,
-      cursor: this.state.dragging === true ? 'pointer' : 'inherit',
-      transform: 'translate3d(0, 0, 0)',
-      WebkitTransform: 'translate3d(0, 0, 0)',
-      msTransform: 'translate3d(0, 0, 0)',
-      boxSizing: 'border-box',
-      MozBoxSizing: 'border-box'
+      cursor: this.state.dragging === true ? 'pointer' : 'inherit'
     }
   },
 
   getFrameStyles() {
     return {
-      position: 'relative',
-      display: 'block',
-      overflow: 'hidden',
       height: this.props.vertical ? this.state.frameWidth || 'initial' : 'auto',
-      margin: this.props.framePadding,
-      padding: 0,
-      transform: 'translate3d(0, 0, 0)',
-      WebkitTransform: 'translate3d(0, 0, 0)',
-      msTransform: 'translate3d(0, 0, 0)',
-      boxSizing: 'border-box',
-      MozBoxSizing: 'border-box'
+      margin: this.props.framePadding
     }
   },
 
   getSlideStyles() {
     return {
       display: this.props.vertical ? 'block' : 'inline-block',
-      listStyleType: 'none',
-      verticalAlign: 'top',
       width: this.props.vertical ? '100%' : this.state.slideWidth,
-      height: 'auto',
-      boxSizing: 'border-box',
-      MozBoxSizing: 'border-box',
       marginLeft: this.props.vertical ? 'auto' : this.props.cellSpacing / 2,
       marginRight: this.props.vertical ? 'auto' : this.props.cellSpacing / 2,
       marginTop: this.props.vertical ? this.props.cellSpacing / 2 : 'auto',
@@ -709,18 +688,9 @@ const Carousel = React.createClass({
 
   getSliderStyles() {
     return {
-      position: 'relative',
-      display: 'block',
       width: this.props.width,
-      height: 'auto',
-      boxSizing: 'border-box',
-      MozBoxSizing: 'border-box',
       visibility: this.state.slideWidth ? 'visible' : 'hidden'
     }
-  },
-
-  getStyleTagStyles() {
-    return '.slider-slide > img {width: 100%; display: block;}'
   },
 
   getDecoratorStyles(position) {
