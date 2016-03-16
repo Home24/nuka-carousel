@@ -92,7 +92,6 @@ const Carousel = React.createClass({
       beforeSlide: function(){},
       cellAlign: 'left',
       cellSpacing: 0,
-      currentSlide: 0,
       data: function() {},
       decorators: decorators,
       dragging: true,
@@ -457,6 +456,8 @@ const Carousel = React.createClass({
 
   getTargetLeft(touchOffset) {
     var offset;
+    var currentSlide = this.state.currentSlide;
+
     switch (this.props.cellAlign) {
       case 'left': {
         offset = 0;
@@ -481,7 +482,11 @@ const Carousel = React.createClass({
 
     offset -= touchOffset || 0;
 
-    return ((this.state.slideWidth * this.state.currentSlide) - offset) * -1 || 0;
+    if (this.props.lazyLoading) {
+      currentSlide = this.state.lazyLoadList.indexOf(currentSlide);
+    }
+
+    return ((this.state.slideWidth * currentSlide) - offset) * -1 || 0;
   },
 
   // Bootstrapping
@@ -511,14 +516,14 @@ const Carousel = React.createClass({
   },
 
   setLazyLoadList() {
-    var currentSlideIndex = this.props.currentSlide;
+    var currentSlideIndex = this.state.currentSlide;
     var slidesToShow = this.props.slidesToShow;
     var lazyLoadingBuffer = this.props.lazyLoadingBuffer;
     var children = React.Children.toArray(this.props.children);
 
     var loadedSlides = children
-      .slice(currentSlideIndex, currentSlideIndex + slidesToShow + lazyLoadingBuffer)
-      .map((slide) => slide.key);
+      .slice(Math.max(0, currentSlideIndex - lazyLoadingBuffer), currentSlideIndex + slidesToShow + lazyLoadingBuffer)
+      .map((slide) => children.indexOf(slide));
 
     this.setState({
       lazyLoadList: loadedSlides
@@ -536,10 +541,10 @@ const Carousel = React.createClass({
     }
 
     var nextLoadedSlides = children
-      .slice(selectedSlideIndex, selectedSlideIndex + slidesToShow + lazyLoadingBuffer)
-      .map((slide) => slide.key);
+      .slice(Math.max(0, selectedSlideIndex - lazyLoadingBuffer), selectedSlideIndex + slidesToShow + lazyLoadingBuffer)
+      .map((slide) => children.indexOf(slide));
 
-    var merged = union(lazyLoadList, nextLoadedSlides);
+    var merged = union(lazyLoadList, nextLoadedSlides).sort();
 
     this.setState({
       lazyLoadList: merged
@@ -552,7 +557,7 @@ const Carousel = React.createClass({
 
     if (this.props.lazyLoading) {
       const childrenArray = React.Children.toArray(children);
-      return childrenArray.filter((child) => lazyLoadList.indexOf(child.key) > -1);
+      return childrenArray.filter((child, index) => lazyLoadList.indexOf(index) > -1);
     } else {
       return children;
     }
