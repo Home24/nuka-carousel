@@ -23,7 +23,9 @@ const App = React.createClass({
         "http://placehold.it/100x100&text=slide6",
         "http://placehold.it/100x100&text=slide7",
         "http://placehold.it/100x100&text=slide8",
-        "http://placehold.it/100x100&text=slide9"
+        "http://placehold.it/100x100&text=slide10",
+        "http://placehold.it/100x100&text=slide11",
+        "http://placehold.it/100x100&text=slide12"
       ]
     }
   },
@@ -63,6 +65,7 @@ const App = React.createClass({
           slideIndex={this.state.slideIndex}
           slidesToShow={2}
           slidesToScroll={2}
+          lazyLoading
           afterSlide={newSlideIndex => this.setState({ slideIndex: newSlideIndex })}>
           {this.getThumbnails()}
         </Carousel>
@@ -72,6 +75,7 @@ const App = React.createClass({
         <button onClick={() => this.setState({ slideIndex: 3 })}>4</button>
         <button onClick={() => this.setState({ slideIndex: 4 })}>5</button>
         <button onClick={() => this.setState({ slideIndex: 5 })}>6</button>
+        <button onClick={() => this.setState({ slideIndex: 11 })}>11</button>
       </div>
     )
   }
