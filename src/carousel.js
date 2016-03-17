@@ -544,7 +544,7 @@ const Carousel = React.createClass({
       .slice(Math.max(0, selectedSlideIndex - lazyLoadingBuffer), selectedSlideIndex + slidesToShow + lazyLoadingBuffer)
       .map((slide) => children.indexOf(slide));
 
-    var merged = union(lazyLoadList, nextLoadedSlides).sort();
+    var merged = union(lazyLoadList, nextLoadedSlides).sort((a, b) =>  a - b);
 
     this.setState({
       lazyLoadList: merged
