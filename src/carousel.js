@@ -127,7 +127,7 @@ const Carousel = React.createClass({
     this.setInitialDimensions();
 
     if (this.props.lazyLoading) {
-      this.setLazyLoadList();
+      this.setLazyLoadList(this.props);
     }
   },
 
@@ -142,6 +142,7 @@ const Carousel = React.createClass({
     if (nextProps.slideIndex !== this.state.currentSlide) {
       this.goToSlide(nextProps.slideIndex);
     }
+    this.setLazyLoadList(nextProps);
   },
 
   componentWillUnmount() {
@@ -510,11 +511,11 @@ const Carousel = React.createClass({
     }
   },
 
-  setLazyLoadList() {
-    var currentSlideIndex = this.props.currentSlide;
-    var slidesToShow = this.props.slidesToShow;
-    var lazyLoadingBuffer = this.props.lazyLoadingBuffer;
-    var children = React.Children.toArray(this.props.children);
+  setLazyLoadList(props) {
+    var currentSlideIndex = props.currentSlide;
+    var slidesToShow = props.slidesToShow;
+    var lazyLoadingBuffer = props.lazyLoadingBuffer;
+    var children = React.Children.toArray(props.children);
 
     var loadedSlides = children
       .slice(currentSlideIndex, currentSlideIndex + slidesToShow + lazyLoadingBuffer)
