@@ -2,11 +2,10 @@
 
 import React from 'react';
 import ReactDom from 'react-dom';
-import tweenState from 'react-tween-state';
+import tweenState from 'kw-react-tween-state';
 import decorators from './decorators';
+import assign from 'object-assign';
 import ExecutionEnvironment from 'exenv';
-import assign from 'lodash/assign';
-import union from 'lodash/union';
 
 const addEvent = function(elem, type, eventHandle) {
   if (elem === null || typeof (elem) === 'undefined') {
@@ -17,7 +16,7 @@ const addEvent = function(elem, type, eventHandle) {
   } else if (elem.attachEvent) {
     elem.attachEvent('on' + type, eventHandle);
   } else {
-    elem['on'+type] = eventHandle;
+    elem['on' + type] = eventHandle;
   }
 };
 
@@ -30,7 +29,7 @@ const removeEvent = function(elem, type, eventHandle) {
   } else if (elem.detachEvent) {
     elem.detachEvent('on' + type, eventHandle);
   } else {
-    elem['on'+type] = null;
+    elem['on' + type] = null;
   }
 };
 
@@ -82,14 +81,13 @@ const Carousel = React.createClass({
     ]),
     speed: React.PropTypes.number,
     vertical: React.PropTypes.bool,
-    width: React.PropTypes.string,
-    stickToEnd: React.PropTypes.bool
+    width: React.PropTypes.string
   },
 
   getDefaultProps() {
     return {
-      afterSlide: function(){},
-      beforeSlide: function(){},
+      afterSlide: function() { },
+      beforeSlide: function() { },
       cellAlign: 'left',
       cellSpacing: 0,
       data: function() {},
@@ -100,16 +98,23 @@ const Carousel = React.createClass({
       framePadding: '0px',
       lazyLoadingBuffer: 1,
       slideIndex: 0,
-      slidesToShow: 1,
       slidesToScroll: 1,
+      slidesToShow: 1,
       slideWidth: 1,
       speed: 500,
       vertical: false,
+      lazyLoading: false,
       width: '100%'
     }
   },
 
   getInitialState() {
+    let lazyLoadList  = [];
+
+    for (let i = 0; i < this.props.children.length; i++) {
+      lazyLoadList[i] = false;
+    }
+
     return {
       currentSlide: this.props.slideIndex,
       dragging: false,
@@ -118,13 +123,13 @@ const Carousel = React.createClass({
       slideCount: 0,
       slidesToScroll: this.props.slidesToScroll,
       slideWidth: 0,
-      top: 0
+      top: 0,
+      lazyLoadList
     }
   },
 
   componentWillMount() {
     this.setInitialDimensions();
-
     if (this.props.lazyLoading) {
       this.setLazyLoadList(this.props);
     }
@@ -137,11 +142,16 @@ const Carousel = React.createClass({
   },
 
   componentWillReceiveProps(nextProps) {
+    this.setState({
+      slideCount: nextProps.children.length
+    });
     this.setDimensions();
     if (nextProps.slideIndex !== this.state.currentSlide) {
       this.goToSlide(nextProps.slideIndex);
     }
-    this.setLazyLoadList(nextProps);
+    if (this.props.lazyLoading) {
+      this.setLazyLoadList(nextProps);
+    }
   },
 
   componentWillUnmount() {
@@ -150,10 +160,7 @@ const Carousel = React.createClass({
 
   render() {
     var self = this;
-    var children = this.getChildren();
-
-    children = this.formatChildren(children);
-
+    var children = React.Children.count(this.props.children) > 1 ? this.formatChildren(this.props.children) : this.props.children;
     return (
       <div className={['slider', this.props.className || ''].join(' ')} ref="slider" style={assign(this.getSliderStyles(), this.props.style || {})}>
         <div className="slider-frame"
@@ -187,7 +194,8 @@ const Carousel = React.createClass({
               </div>
             )
           })
-          : null}
+        : null}
+        <style type="text/css" dangerouslySetInnerHTML={{__html: self.getStyleTagStyles()}}/>
       </div>
     )
   },
@@ -218,20 +226,21 @@ const Carousel = React.createClass({
           e.preventDefault();
         }
 
+        var length = self.props.vertical ? Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2)))
+                                         : Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2)))
+
         self.touchObject = {
           startX: self.touchObject.startX,
           startY: self.touchObject.startY,
           endX: e.touches[0].pageX,
           endY: e.touches[0].pageY,
-          length: self.props.vertical ?
-            Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2))) :
-            Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2))),
+          length: length,
           direction: direction
         }
 
         self.setState({
-          left: self.props.vertical ? 0 : (self.state.slideWidth * self.state.currentSlide + (self.touchObject.length * self.touchObject.direction)) * -1 || 0,
-          top: self.props.vertical ? (self.state.slideWidth * self.state.currentSlide + (self.touchObject.length * self.touchObject.direction)) * -1 || 0: 0
+          left: self.props.vertical ? 0 : self.getTargetLeft(self.touchObject.length * self.touchObject.direction),
+          top: self.props.vertical ? self.getTargetLeft(self.touchObject.length * self.touchObject.direction) : 0
         });
       },
       onTouchEnd(e) {
@@ -280,7 +289,7 @@ const Carousel = React.createClass({
         }
 
         var length = self.props.vertical ? Math.round(Math.sqrt(Math.pow(e.clientY - self.touchObject.startY, 2)))
-          : Math.round(Math.sqrt(Math.pow(e.clientX - self.touchObject.startX, 2)))
+                                         : Math.round(Math.sqrt(Math.pow(e.clientX - self.touchObject.startX, 2)))
 
         self.touchObject = {
           startX: self.touchObject.startX,
@@ -317,38 +326,36 @@ const Carousel = React.createClass({
     if (this.clickSafe === true) {
       e.preventDefault();
       e.stopPropagation();
-      e.nativeEvent.stopPropagation();
+
+      if (e.nativeEvent) {
+        e.nativeEvent.stopPropagation();
+      }
     }
   },
 
   handleSwipe(e) {
-    var slidesToShow = this.props.slidesToShow;
-    var currentSlide = this.state.currentSlide;
-    var lastSlide = this.getLastSlide();
-
     if (typeof (this.touchObject.length) !== 'undefined' && this.touchObject.length > 44) {
       this.clickSafe = true;
     } else {
       this.clickSafe = false;
     }
 
-    if (this.touchObject.length > (this.state.slideWidth / slidesToShow) / 5) {
+    if (this.touchObject.length > (this.state.slideWidth / this.props.slidesToShow) / 5) {
       if (this.touchObject.direction === 1) {
-
-        if (this.state.currentSlide >= lastSlide) {
+        if (this.state.currentSlide >= React.Children.count(this.props.children) - this.props.slidesToShow) {
           this.animateSlide(tweenState.easingTypes[this.props.edgeEasing]);
         } else {
           this.nextSlide();
         }
       } else if (this.touchObject.direction === -1) {
-        if (currentSlide <= 0) {
+        if (this.state.currentSlide <= 0) {
           this.animateSlide(tweenState.easingTypes[this.props.edgeEasing]);
         } else {
           this.previousSlide();
         }
       }
     } else {
-      this.goToSlide(currentSlide);
+      this.goToSlide(this.state.currentSlide);
     }
 
     this.touchObject = {};
@@ -394,9 +401,7 @@ const Carousel = React.createClass({
 
   goToSlide(index) {
     var self = this;
-    var lastSlide = this.getLastSlide();
-
-    if (index > lastSlide || index < 0) {
+    if (index >= React.Children.count(this.props.children) || index < 0) {
       return;
     }
 
@@ -414,35 +419,22 @@ const Carousel = React.createClass({
       self.setExternalData();
     });
   },
-  getLastSlide() {
-    var childrenCount = React.Children.count(this.props.children);
-    var slidesToShow = this.props.slidesToShow;
-    var slidesToScroll = this.state.slidesToScroll;
-
-    return this.props.stickToEnd ?
-      childrenCount - slidesToShow :
-      (Math.ceil(childrenCount / slidesToScroll) - 1) * slidesToScroll;
-  },
 
   nextSlide() {
-    var slidesToScroll = this.state.slidesToScroll;
-    var currentSlide = this.state.currentSlide;
-
-    var lastSlide = this.getLastSlide();
-
-    if ((currentSlide + slidesToScroll) > lastSlide) {
+    var childrenCount = React.Children.count(this.props.children);
+    if (this.state.currentSlide >= childrenCount - this.props.slidesToShow) {
       return;
     }
 
-    this.goToSlide(currentSlide + slidesToScroll);
+    this.goToSlide(Math.min(this.state.currentSlide + this.state.slidesToScroll, childrenCount - this.props.slidesToShow));
   },
 
   previousSlide() {
-    if ((this.state.currentSlide - this.state.slidesToScroll) < 0) {
+    if (this.state.currentSlide <= 0) {
       return;
     }
 
-    this.goToSlide(this.state.currentSlide - this.state.slidesToScroll);
+    this.goToSlide(Math.max(0, this.state.currentSlide - this.state.slidesToScroll));
   },
 
   // Animation
@@ -457,24 +449,22 @@ const Carousel = React.createClass({
 
   getTargetLeft(touchOffset) {
     var offset;
-    var currentSlide = this.state.currentSlide;
-
     switch (this.props.cellAlign) {
-      case 'left': {
-        offset = 0;
-        offset -= this.props.cellSpacing * (this.state.currentSlide);
-        break;
-      }
-      case 'center': {
-        offset = (this.state.frameWidth - this.state.slideWidth) / 2;
-        offset -= this.props.cellSpacing * (this.state.currentSlide);
-        break;
-      }
-      case 'right': {
-        offset = this.state.frameWidth - this.state.slideWidth;
-        offset -= this.props.cellSpacing * (this.state.currentSlide);
-        break;
-      }
+    case 'left': {
+      offset = 0;
+      offset -= this.props.cellSpacing * (this.state.currentSlide);
+      break;
+    }
+    case 'center': {
+      offset = (this.state.frameWidth - this.state.slideWidth) / 2;
+      offset -= this.props.cellSpacing * (this.state.currentSlide);
+      break;
+    }
+    case 'right': {
+      offset = this.state.frameWidth - this.state.slideWidth;
+      offset -= this.props.cellSpacing * (this.state.currentSlide);
+      break;
+    }
     }
 
     if (this.props.vertical) {
@@ -483,11 +473,7 @@ const Carousel = React.createClass({
 
     offset -= touchOffset || 0;
 
-    if (this.props.lazyLoading) {
-      currentSlide = this.state.lazyLoadList.indexOf(currentSlide);
-    }
-
-    return ((this.state.slideWidth * currentSlide) - offset) * -1 || 0;
+    return ((this.state.slideWidth * this.state.currentSlide) - offset) * -1;
   },
 
   // Bootstrapping
@@ -522,52 +508,41 @@ const Carousel = React.createClass({
     var lazyLoadingBuffer = props.lazyLoadingBuffer;
     var children = React.Children.toArray(props.children);
 
-    var loadedSlides = children
-      .slice(Math.max(0, currentSlideIndex - lazyLoadingBuffer), currentSlideIndex + slidesToShow + lazyLoadingBuffer)
-      .map((slide) => children.indexOf(slide));
+    const min = Math.max(0, currentSlideIndex - lazyLoadingBuffer * slidesToShow);
+    const max = Math.min(children.length, currentSlideIndex + slidesToShow + (slidesToShow * lazyLoadingBuffer));
 
-    this.setState({
-      lazyLoadList: loadedSlides
-    });
+    const lazyLoadList = this.state.lazyLoadList.map((el, index) => index >= min && index <= max || el);
+
+    this.setState({ lazyLoadList });
   },
 
   addToLazyLoadList(selectedSlideIndex = 0) {
     var children = React.Children.toArray(this.props.children);
     var slidesToShow = this.props.slidesToShow;
-    var lazyLoadList = this.state.lazyLoadList;
+
     var lazyLoadingBuffer = this.props.lazyLoadingBuffer;
 
-    if (children.length === lazyLoadList.length) {
-      return;
-    }
+    const min = Math.max(0, selectedSlideIndex - lazyLoadingBuffer * slidesToShow);
+    const max = Math.min(children.length, selectedSlideIndex + slidesToShow + (slidesToShow * lazyLoadingBuffer));
 
-    var nextLoadedSlides = children
-      .slice(Math.max(0, selectedSlideIndex - lazyLoadingBuffer), selectedSlideIndex + slidesToShow + lazyLoadingBuffer)
-      .map((slide) => children.indexOf(slide));
+    const lazyLoadList = this.state.lazyLoadList.map((el, index) => index >= min && index <= max || el);
 
-    var merged = union(lazyLoadList, nextLoadedSlides).sort((a, b) =>  a - b);
-
-    this.setState({
-      lazyLoadList: merged
-    });
-  },
-
-  getChildren() {
-    const { children } = this.props;
-    const { lazyLoadList } = this.state;
-
-    if (this.props.lazyLoading) {
-      const childrenArray = React.Children.toArray(children);
-      return childrenArray.filter((child, index) => lazyLoadList.indexOf(index) > -1);
-    } else {
-      return children;
-    }
+    this.setState({ lazyLoadList });
   },
 
   formatChildren(children) {
     var self = this;
+    const { lazyLoadList } = this.state;
+
     return React.Children.map(children, function(child, index) {
-      return <li className="slider-slide" style={self.getSlideStyles()} key={index}>{child}</li>
+
+      return <li className="slider-slide" style={self.getSlideStyles()} key={index}>
+        {
+          self.props.lazyLoading ?
+          lazyLoadList[index] && child :
+              child
+        }
+      </li>
     });
   },
 
@@ -600,7 +575,7 @@ const Carousel = React.createClass({
       slideHeight;
 
     slidesToScroll = this.props.slidesToScroll;
-    frame = ReactDom.findDOMNode(this.refs.frame);
+    frame = this.refs.frame;
     firstSlide = frame.childNodes[0].childNodes[0];
     if (firstSlide) {
       firstSlide.style.height = 'auto';
@@ -632,11 +607,10 @@ const Carousel = React.createClass({
 
     this.setState({
       frameWidth: frameWidth,
-      slideCount: React.Children.count(this.props.children),
       slideWidth: slideWidth,
       slidesToScroll: slidesToScroll,
       left: this.props.vertical ? 0 : this.getTargetLeft(),
-      top: this.props.vertical ? this.getTargetLeft(): 0
+      top: this.props.vertical ? this.getTargetLeft() : 0
     }, function() {
       self.setLeft()
     });
@@ -662,28 +636,53 @@ const Carousel = React.createClass({
   getListStyles() {
     var listWidth = this.state.slideWidth * React.Children.count(this.props.children);
     var spacingOffset = this.props.cellSpacing * React.Children.count(this.props.children);
+    var transform = 'translate3d(' +
+      this.getTweeningValue('left') + 'px, ' +
+      this.getTweeningValue('top') + 'px, 0)'
     return {
-      top: this.getTweeningValue('top'),
-      left: this.getTweeningValue('left'),
+      transform,
+      WebkitTransform: transform,
+      msTransform: 'translate(' +
+        this.getTweeningValue('left') + 'px, ' +
+        this.getTweeningValue('top') + 'px)',
+      position: 'relative',
+      display: 'block',
       margin: this.props.vertical ? (this.props.cellSpacing / 2) * -1 + 'px 0px'
-        : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
+                                  : '0px ' + (this.props.cellSpacing / 2) * -1 + 'px',
+      padding: 0,
       height: this.props.vertical ? listWidth + spacingOffset : 'auto',
       width: this.props.vertical ? 'auto' : listWidth + spacingOffset,
-      cursor: this.state.dragging === true ? 'pointer' : 'inherit'
+      cursor: this.state.dragging === true ? 'pointer' : 'inherit',
+      boxSizing: 'border-box',
+      MozBoxSizing: 'border-box'
     }
   },
 
   getFrameStyles() {
     return {
+      position: 'relative',
+      display: 'block',
+      overflow: 'hidden',
       height: this.props.vertical ? this.state.frameWidth || 'initial' : 'auto',
-      margin: this.props.framePadding
+      margin: this.props.framePadding,
+      padding: 0,
+      transform: 'translate3d(0, 0, 0)',
+      WebkitTransform: 'translate3d(0, 0, 0)',
+      msTransform: 'translate(0, 0)',
+      boxSizing: 'border-box',
+      MozBoxSizing: 'border-box'
     }
   },
 
   getSlideStyles() {
     return {
       display: this.props.vertical ? 'block' : 'inline-block',
+      listStyleType: 'none',
+      verticalAlign: 'top',
       width: this.props.vertical ? '100%' : this.state.slideWidth,
+      height: this.props.lazyLoading && this.props.vertical ? this.state.slideWidth : 'auto',
+      boxSizing: 'border-box',
+      MozBoxSizing: 'border-box',
       marginLeft: this.props.vertical ? 'auto' : this.props.cellSpacing / 2,
       marginRight: this.props.vertical ? 'auto' : this.props.cellSpacing / 2,
       marginTop: this.props.vertical ? this.props.cellSpacing / 2 : 'auto',
@@ -693,38 +692,51 @@ const Carousel = React.createClass({
 
   getSliderStyles() {
     return {
+      position: 'relative',
+      display: 'block',
       width: this.props.width,
+      height: 'auto',
+      boxSizing: 'border-box',
+      MozBoxSizing: 'border-box',
       visibility: this.state.slideWidth ? 'visible' : 'hidden'
     }
   },
 
+  getStyleTagStyles() {
+    return '.slider-slide > img {width: 100%; display: block;}'
+  },
+
   getDecoratorStyles(position) {
     switch (position) {
-      case 'TopLeft': {
+    case 'TopLeft':
+      {
         return {
           position: 'absolute',
           top: 0,
           left: 0
-        }
+        };
       }
-      case 'TopCenter': {
+    case 'TopCenter':
+      {
         return {
           position: 'absolute',
           top: 0,
           left: '50%',
           transform: 'translateX(-50%)',
-          msTransform: 'translateX(-50%)',
-          WebkitTransform: 'translateX(-50%)'
-        }
+          WebkitTransform: 'translateX(-50%)',
+          msTransform: 'translateX(-50%)'
+        };
       }
-      case 'TopRight': {
+    case 'TopRight':
+      {
         return {
           position: 'absolute',
           top: 0,
           right: 0
-        }
+        };
       }
-      case 'CenterLeft': {
+    case 'CenterLeft':
+      {
         return {
           position: 'absolute',
           top: '50%',
@@ -732,9 +744,10 @@ const Carousel = React.createClass({
           transform: 'translateY(-50%)',
           WebkitTransform: 'translateY(-50%)',
           msTransform: 'translateY(-50%)'
-        }
+        };
       }
-      case 'CenterCenter': {
+    case 'CenterCenter':
+      {
         return {
           position: 'absolute',
           top: '50%',
@@ -742,9 +755,10 @@ const Carousel = React.createClass({
           transform: 'translate(-50%,-50%)',
           WebkitTransform: 'translate(-50%, -50%)',
           msTransform: 'translate(-50%, -50%)'
-        }
+        };
       }
-      case 'CenterRight': {
+    case 'CenterRight':
+      {
         return {
           position: 'absolute',
           top: '50%',
@@ -752,16 +766,18 @@ const Carousel = React.createClass({
           transform: 'translateY(-50%)',
           WebkitTransform: 'translateY(-50%)',
           msTransform: 'translateY(-50%)'
-        }
+        };
       }
-      case 'BottomLeft': {
+    case 'BottomLeft':
+      {
         return {
           position: 'absolute',
           bottom: 0,
           left: 0
-        }
+        };
       }
-      case 'BottomCenter': {
+    case 'BottomCenter':
+      {
         return {
           position: 'absolute',
           bottom: 0,
@@ -769,21 +785,23 @@ const Carousel = React.createClass({
           transform: 'translateX(-50%)',
           WebkitTransform: 'translateX(-50%)',
           msTransform: 'translateX(-50%)'
-        }
+        };
       }
-      case 'BottomRight': {
+    case 'BottomRight':
+      {
         return {
           position: 'absolute',
           bottom: 0,
           right: 0
-        }
+        };
       }
-      default: {
+    default:
+      {
         return {
           position: 'absolute',
           top: 0,
           left: 0
-        }
+        };
       }
     }
   }
