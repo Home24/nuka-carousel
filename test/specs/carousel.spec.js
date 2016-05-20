@@ -8,11 +8,21 @@ describe('Carousel', function () {
 
   var carousel, container, component;
 
+  function setup() {
+    carousel = require('carousel');
+    container = document.createElement('DIV');
+    document.body.appendChild(container);
+  }
+  function teardown() {
+    ReactDOM.unmountComponentAtNode(container);
+    document.body.removeChild(container);
+    container = null;
+  }
+
   describe('Mounting', function() {
 
     beforeEach(function() {
-      carousel = require('carousel');
-      container = document.body;
+      setup();
       component = ReactDOM.render(
         React.createElement(carousel, {},
           React.createElement('p', null, 'Slide 1'),
@@ -24,7 +34,7 @@ describe('Carousel', function () {
     });
 
     afterEach(function() {
-      ReactDOM.unmountComponentAtNode(container);
+      teardown();
     });
 
     it('should render into the document', function() {
@@ -36,12 +46,11 @@ describe('Carousel', function () {
   describe('Build', function() {
 
     beforeEach(function() {
-      carousel = require('carousel');
-      container = document.body;
+      setup();
     });
 
     afterEach(function() {
-      ReactDOM.unmountComponentAtNode(container);
+      teardown();
     });
 
     it('should render a .slider div', function() {
@@ -139,12 +148,11 @@ describe('Carousel', function () {
   describe('Props', function() {
 
     beforeEach(function() {
-      carousel = require('carousel');
-      container = document.body;
+      setup();
     });
 
     afterEach(function() {
-      ReactDOM.unmountComponentAtNode(container);
+      teardown();
     });
 
     it('should render with class "slider" with no props supplied', function() {
@@ -192,7 +200,8 @@ describe('Carousel', function () {
           component,
           'slider'
         );
-        expect(slider.props.style.backgroundColor).to.equal('black');
+        expect(slider.style.backgroundColor).to.equal('black');
+        expect(slider.style.display).to.equal('block');
     });
 
     it('should merge provided styles with the defaults', function() {
@@ -208,7 +217,8 @@ describe('Carousel', function () {
           component,
           'slider'
         );
-        expect(slider.props.style.backgroundColor).to.equal('black');
+        expect(slider.style.backgroundColor).to.equal('black');
+        expect(slider.style.display).to.equal('block');
     });
 
     it('should align to 0 if cellAlign is left', function() {
@@ -224,7 +234,8 @@ describe('Carousel', function () {
           component,
           'slider-list'
         );
-        expect(slider.props.style.left).to.equal(0);
+        console.log(slider.style)
+        expect(slider.style.transform).to.equal('translate3d(0px, 0px, 0)');
     });
 
     it('should align to 200 if cellAlign is center', function() {
@@ -241,7 +252,7 @@ describe('Carousel', function () {
         component,
           'slider-list'
         );
-        expect(slider.props.style.left).to.equal(200);
+        expect(slider.style.transform).to.equal('translate3d(200px, 0px, 0)');
     });
 
     it('should align to 400 if cellAlign is right', function() {
@@ -258,7 +269,7 @@ describe('Carousel', function () {
         component,
           'slider-list'
         );
-        expect(slider.props.style.left).to.equal(400);
+        expect(slider.style.transform).to.equal('translate3d(400px, 0px, 0)');
     });
 
     it('should set slide width to 200 if cellSpacing is not provided', function() {
@@ -275,7 +286,7 @@ describe('Carousel', function () {
         component,
           'slider-slide'
         );
-        expect(slider[0].props.style.width).to.equal(200);
+        expect(slider[0].style.width).to.equal('200px');
     });
 
     it('should set slide width to 180 if cellSpacing is set to 30', function() {
@@ -292,7 +303,7 @@ describe('Carousel', function () {
         component,
           'slider-slide'
         );
-        expect(slider[0].props.style.width).to.equal(180);
+        expect(slider[0].style.width).to.equal('180px');
     });
 
     it('should not add mouse handlers if dragging is false', function() {
@@ -309,7 +320,7 @@ describe('Carousel', function () {
         component,
           'slider-frame'
         );
-        expect(frame.props.onMouseDown).to.be.undefined;
+        expect(frame.onMouseDown).to.be.undefined;
     });
 
     it('should add mouse handlers if dragging is true', function() {
@@ -326,7 +337,7 @@ describe('Carousel', function () {
         component,
           'slider-frame'
         );
-        expect(frame.props.onMouseDown).to.be.defined;
+        expect(frame.onMouseDown).to.be.defined;
     });
 
     it('should add frame margin if framePadding is supplied a value', function() {
@@ -343,7 +354,7 @@ describe('Carousel', function () {
         component,
           'slider-frame'
         );
-        expect(frame.props.style.margin).to.equal('40px');
+        expect(frame.style.margin).to.equal('40px');
     });
 
     it('should set slideWidth to 1000 if slidesToShow is 1', function() {
@@ -361,7 +372,7 @@ describe('Carousel', function () {
           'slider-slide'
         );
 
-        expect(slide[0].props.style.width).to.equal(1000);
+        expect(slide[0].style.width).to.equal('1000px');
     });
 
     it('should set slideWidth to 200 if slidesToShow is 3', function() {
@@ -379,10 +390,26 @@ describe('Carousel', function () {
           'slider-slide'
         );
 
-        expect(slide[0].props.style.width).to.equal(200);
+        expect(slide[0].style.width).to.equal('200px');
     });
 
-    it('should have currentSlide equal 2 if slidesToScroll is 2 and it advances', function() {
+    it('should have currentSlide equal 2 for 4 slides if slidesToShow is 2, slidesToScroll is 2, and it advances', function() {
+        component = ReactDOM.render(
+          React.createElement(carousel, {slidesToShow: 2, slidesToScroll: 2},
+            React.createElement('p', null, 'Slide 1'),
+            React.createElement('p', null, 'Slide 2'),
+            React.createElement('p', null, 'Slide 3'),
+            React.createElement('p', null, 'Slide 4')
+          ),
+          container
+        );
+
+        component.nextSlide();
+
+        expect(component.state.currentSlide).to.equal(2);
+    });
+
+    it('should have currentSlide equal 1 for 3 slides if slidesToShow is 2, slidesToScroll is 2, and it advances', function() {
         component = ReactDOM.render(
           React.createElement(carousel, {slidesToShow: 2, slidesToScroll: 2},
             React.createElement('p', null, 'Slide 1'),
@@ -394,7 +421,7 @@ describe('Carousel', function () {
 
         component.nextSlide();
 
-        expect(component.state.currentSlide).to.equal(2);
+        expect(component.state.currentSlide).to.equal(1);
     });
 
     it('should set slidesToScroll to passed in slidesToScroll', function() {
@@ -461,12 +488,11 @@ describe('Carousel', function () {
   describe('Methods', function() {
 
     beforeEach(function() {
-      carousel = require('carousel');
-      container = document.body;
+      setup();
     });
 
     afterEach(function() {
-      ReactDOM.unmountComponentAtNode(container);
+      teardown();
     });
 
     it('should advance if nextSlide() is called', function() {

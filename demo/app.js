@@ -3,59 +3,14 @@
 import Carousel from '../src/carousel';
 import React from 'react';
 import ReactDom from 'react-dom';
-import classnames from 'classnames';
-
 
 window.React = React;
 
 const App = React.createClass({
   mixins: [Carousel.ControllerMixin],
 
-  getInitialState() { return { slideIndex: 0, highlightedSlide: 0 }; },
-  getDefaultProps() {
-    return {
-      images: [
-        "http://placehold.it/100x100&text=slide1",
-        "http://placehold.it/100x100&text=slide2",
-        "http://placehold.it/100x100&text=slide3",
-        "http://placehold.it/100x100&text=slide4",
-        "http://placehold.it/100x100&text=slide5",
-        "http://placehold.it/100x100&text=slide6",
-        "http://placehold.it/100x100&text=slide7",
-        "http://placehold.it/100x100&text=slide8",
-        "http://placehold.it/100x100&text=slide10",
-        "http://placehold.it/100x100&text=slide11",
-        "http://placehold.it/100x100&text=slide12"
-      ]
-    }
-  },
-  onMouseOver(index) {
-    this.setState({ highlightedSlide: index });
-  },
-  getThumbnails() {
-    const { images } = this.props;
-    const { highlightedSlide } = this.state;
+  getInitialState() { return { slideIndex: 0 }; },
 
-    return images.map((img, index) => {
-      const onMouseOver = this.onMouseOver.bind(this, index);
-      const classNames = classnames(
-        'article-gallery__thumbnail',
-        {
-          'article-gallery__thumbnail--selected': (index === highlightedSlide)
-        }
-      );
-
-      return (
-        <div
-          key={index}
-          className={classNames}
-          onMouseOver={onMouseOver}
-        >
-          <img src={img} />
-        </div>
-      );
-    });
-  },
   render() {
     return (
       <div style={{width: '50%', margin: 'auto'}}>
@@ -67,15 +22,24 @@ const App = React.createClass({
           slidesToScroll={2}
           lazyLoading
           afterSlide={newSlideIndex => this.setState({ slideIndex: newSlideIndex })}>
-          {this.getThumbnails()}
+          <img src="http://placehold.it/1000x400&text=slide0"/>
+          <img src="http://placehold.it/1000x400&text=slide1"/>
+          <img src="http://placehold.it/1000x400&text=slide2"/>
+          <img src="http://placehold.it/1000x400&text=slide3"/>
+          <img src="http://placehold.it/1000x400&text=slide4"/>
+          <img src="http://placehold.it/1000x400&text=slide5"/>
+          <img src="http://placehold.it/1000x400&text=slide6"/>
+          <img src="http://placehold.it/1000x400&text=slide7"/>
+          <img src="http://placehold.it/1000x400&text=slide8"/>
+          <img src="http://placehold.it/1000x400&text=slide9"/>
+          <img src="http://placehold.it/1000x400&text=slide10"/>
         </Carousel>
-        <button onClick={() => this.setState({ slideIndex: 0 })}>1</button>
-        <button onClick={() => this.setState({ slideIndex: 1 })}>2</button>
-        <button onClick={() => this.setState({ slideIndex: 2 })}>3</button>
-        <button onClick={() => this.setState({ slideIndex: 3 })}>4</button>
-        <button onClick={() => this.setState({ slideIndex: 4 })}>5</button>
-        <button onClick={() => this.setState({ slideIndex: 5 })}>6</button>
-        <button onClick={() => this.setState({ slideIndex: 11 })}>11</button>
+        <button onClick={() => this.setState({ slideIndex: 0 })}>0</button>
+        <button onClick={() => this.setState({ slideIndex: 1 })}>1</button>
+        <button onClick={() => this.setState({ slideIndex: 2 })}>2</button>
+        <button onClick={() => this.setState({ slideIndex: 3 })}>3</button>
+        <button onClick={() => this.setState({ slideIndex: 4 })}>4</button>
+        <button onClick={() => this.setState({ slideIndex: 5 })}>5</button>
       </div>
     )
   }
