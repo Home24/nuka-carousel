@@ -708,14 +708,6 @@ const Carousel = React.createClass({
 
   getDecoratorStyles(position) {
     switch (position) {
-    case 'TopLeft':
-      {
-        return {
-          position: 'absolute',
-          top: 0,
-          left: 0
-        };
-      }
     case 'TopCenter':
       {
         return {
@@ -795,6 +787,8 @@ const Carousel = React.createClass({
           right: 0
         };
       }
+
+    case 'TopLeft':
     default:
       {
         return {
