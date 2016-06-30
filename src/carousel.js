@@ -195,7 +195,6 @@ const Carousel = React.createClass({
             )
           })
         : null}
-        <style type="text/css" dangerouslySetInnerHTML={{__html: self.getStyleTagStyles()}}/>
       </div>
     )
   },
@@ -700,10 +699,6 @@ const Carousel = React.createClass({
       MozBoxSizing: 'border-box',
       visibility: this.state.slideWidth ? 'visible' : 'hidden'
     }
-  },
-
-  getStyleTagStyles() {
-    return '.slider-slide > img {width: 100%; display: block;}'
   },
 
   getDecoratorStyles(position) {
