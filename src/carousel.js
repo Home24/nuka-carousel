@@ -3,7 +3,7 @@
 import React from 'react';
 import ReactDom from 'react-dom';
 import tweenState from 'kw-react-tween-state';
-import decorators from './decorators';
+import { DefaultDecorators }from './decorators';
 import assign from 'object-assign';
 import ExecutionEnvironment from 'exenv';
 
@@ -91,7 +91,7 @@ const Carousel = React.createClass({
       cellAlign: 'left',
       cellSpacing: 0,
       data: function() {},
-      decorators: decorators,
+      decorators: DefaultDecorators,
       dragging: true,
       easing: 'easeOutCirc',
       edgeEasing: 'easeOutElastic',
@@ -111,7 +111,7 @@ const Carousel = React.createClass({
   getInitialState() {
     let lazyLoadList  = [];
 
-    for (let i = 0; i < this.props.children.length; i++) {
+    for (let i = 0, length = React.Children.count(this.props.children); i < length; i++) {
       lazyLoadList[i] = false;
     }
 
@@ -759,8 +759,9 @@ const Carousel = React.createClass({
       {
         return {
           position: 'absolute',
-          bottom: 0,
-          left: 0
+          bottom: 10,
+          left: 0,
+          width: '100%'
         };
       }
     case 'BottomCenter':
