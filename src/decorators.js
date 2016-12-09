@@ -1,6 +1,7 @@
 'use strict';
 
 import React from 'react';
+import cx from 'classnames';
 
 const DefaultDecorators = [
   {
@@ -118,4 +119,45 @@ const DefaultDecorators = [
   }
 ];
 
-export default DefaultDecorators;
+const MobilePagination = {
+  component: React.createClass({
+    render() {
+      var indexes = this.getIndexes(this.props.slideCount, this.props.slidesToScroll);
+
+      if (indexes.length < 2) {
+        return null;
+      }
+
+      return (
+        <div className="nuka-carousel__pagination">
+          {
+            indexes.map((index) =>
+              <span
+                className={
+                  cx('nuka-carousel__pagination-bullet', {
+                    'nuka-carousel__pagination-bullet--active': this.props.currentSlide === index
+                  })
+                }
+                key={index}
+                onClick={this.props.goToSlide.bind(null, index)}
+              />
+            )
+          }
+        </div>
+      )
+    },
+    getIndexes(count, inc) {
+      var arr = [];
+      for (var i = 0; i < count; i += inc) {
+        arr.push(i);
+      }
+      return arr;
+    }
+  }),
+  position: 'BottomLeft'
+};
+
+export {
+  DefaultDecorators,
+  MobilePagination
+};
