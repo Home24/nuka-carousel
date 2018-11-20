@@ -506,11 +506,12 @@ const Carousel = React.createClass({
     var slidesToShow = props.slidesToShow;
     var lazyLoadingBuffer = props.lazyLoadingBuffer;
     var children = React.Children.toArray(props.children);
+    var self = this;
 
     const min = Math.max(0, currentSlideIndex - lazyLoadingBuffer * slidesToShow);
     const max = Math.min(children.length, currentSlideIndex + slidesToShow + (slidesToShow * lazyLoadingBuffer));
 
-    const lazyLoadList = this.state.lazyLoadList.map((el, index) => index >= min && index <= max || el);
+    const lazyLoadList = props.children.map((el, index) => index >= min && index <= max || (self.state.lazyLoadList[index] === undefined ? false : self.state.lazyLoadList[index]));
 
     this.setState({ lazyLoadList });
   },
